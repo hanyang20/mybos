@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="bos-bean" />
+        <module name="bos-dao" />
+        <module name="bos-service" />
+        <module name="bos-utils" />
+        <module name="bos-web" />
+        <module name="crm_heima20" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel target="1.7">
+      <module name="bos-bean" target="1.7" />
+      <module name="bos-dao" target="1.7" />
+      <module name="bos-parent" target="1.5" />
+      <module name="bos-service" target="1.7" />
+      <module name="bos-utils" target="1.7" />
+      <module name="bos-web" target="1.7" />
+      <module name="crm_heima20" target="1.7" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

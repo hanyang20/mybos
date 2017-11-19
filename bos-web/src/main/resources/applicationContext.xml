@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+       xmlns="http://www.springframework.org/schema/beans" 
+       xmlns:aop="http://www.springframework.org/schema/aop" 
+       xmlns:context="http://www.springframework.org/schema/context" 
+       xmlns:tx="http://www.springframework.org/schema/tx" 
+       xmlns:jaxws="http://cxf.apache.org/jaxws"
+       xmlns:soap="http://cxf.apache.org/bindings/soap"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans 
+                           http://www.springframework.org/schema/beans/spring-beans-4.2.xsd 
+                           http://www.springframework.org/schema/aop 
+                           http://www.springframework.org/schema/aop/spring-aop-4.2.xsd 
+                           http://www.springframework.org/schema/context 
+                           http://www.springframework.org/schema/context/spring-context-4.2.xsd 
+                           http://www.springframework.org/schema/tx 
+                           http://www.springframework.org/schema/tx/spring-tx-4.2.xsd
+                           http://cxf.apache.org/bindings/soap 
+					       http://cxf.apache.org/schemas/configuration/soap.xsd
+					       http://cxf.apache.org/jaxws 
+					       http://cxf.apache.org/schemas/jaxws.xsd
+                            ">
+		<!-- 扫描properties文件 -->
+		<context:property-placeholder location="classpath:jdbc.properties"/>				
+		<!-- 数据源 -->
+		<bean name="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+		    <property name="driverClass" value="${jdbc.driverClass}"></property>
+		    <property name="jdbcUrl" value="${jdbc.jdbcUrl}"></property>
+		    <property name="user" value="${jdbc.user}"></property>
+		    <property name="password" value="${jdbc.password}"></property>
+		</bean>
+		<!-- 配置LocalSessionFactoryBean，spring提供的用于整合hibernate的工厂bean -->
+		<bean name="sessionFactory" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+		   <property name="dataSource" ref="dataSource"></property>
+		   <property name="hibernateProperties">
+		      <props>
+		        <prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
+		        <prop key="hibernate.hbm2ddl.auto">update</prop>
+		        <prop key="hibernate.show_sql">true</prop>
+		        <prop key="hibernate.format_sql">true</prop>
+		      </props>
+		   </property>
+		   <property name="mappingLocations">
+		     <list>
+		       <value>classpath:com/itheima/bos/bean/*.xml</value>
+		     </list>
+		   </property>
+		</bean>	
+		<!-- 事务控制核心 -->	
+		<bean name="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+		   <property name="sessionFactory" ref="sessionFactory"></property>
+		</bean>			
+		<!-- 组件扫描 -->	
+		<context:component-scan base-package="com.itheima.bos"></context:component-scan>
+		<!-- 支持spring注解 -->
+		<context:annotation-config/>
+		<!-- 开启事务注解 -->	
+		<tx:annotation-driven/>	
+		<!-- 注入crm代理对象 -->	
+		<jaxws:client id="crmClient" address="http://localhost:8080/crm_heima20/service/customer" serviceClass="com.itheima.crm.ICustomerService"/>
+		<!--配置shiro框架过滤器工厂bean-->
+	    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+            <!--注入安全管理器对象-->
+             <property name="securityManager" ref="securityManager"/>
+			<!--注入相关页面访问url-->
+			 <property name="loginUrl" value="/login.jsp"/>
+			 <property name="successUrl" value="/index.jsp"/>
+			 <property name="unauthorizedUrl" value="/unauthorized.jsp"/>
+            <!--配置url级别拦截策略-->
+			<property name="FilterChainDefinitions">
+				<value>
+					/css/** = anon
+					/js/** = anon
+					/images/** = anon
+					/validatecode.jsp* = anon
+					/login.jsp = anon
+					/userAction_login.action = anon
+					/page_base_staff.action = perms["staff-list"]
+					/* = authc
+				</value>
+			</property>
+
+		</bean>
+	<!--配置安全管理器-->
+	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+		<!--注入自定义bosRealm到安全管理器-->
+		<property name="realm" ref="bosRealm"/>
+		<!--注入缓存管理器-->
+		<property name="cacheManager" ref="cacheManager"></property>
+	</bean>
+	<!--注册自定义realm-->
+	<bean id="bosRealm" class="com.itheima.bos.service.realm.BOSRealm"></bean>
+
+	<!--注册缓存管理器-->
+	<bean id="cacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager">
+		<!--指定读取配置文件-->
+		<property name="cacheManagerConfigFile" value="classpath:ehcache.xml"></property>
+	</bean>
+</beans>
